@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.9.0;
+pragma solidity ^0.8.6;
+pragma abicoder v2;
 
 contract Campaign {
   address public manager;
@@ -39,10 +40,15 @@ contract Campaign {
     request.approvalCount++;
   }
 
+  function getApprovalForRequest(address approver, uint index) public view returns (bool) {
+    return requests[index].approvals[approver];
+  } 
+
   function finalizeRequest(uint index) public onlyManager {
     require(!requests[index].isComplete, "Request is already completed");    
     require(requests[index].approvalCount > (approversCount / 2));
-    requests[index].isComplete = true;
+    Request storage request = requests[index];
+    request.isComplete = true;
     address payable recipientAddress = payable(requests[index].recipient);
     (bool sent, ) = recipientAddress.call{ value: requests[index].value }("");
     require(sent, "Cannot send ether to given address!");
